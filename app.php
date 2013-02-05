@@ -122,6 +122,15 @@ function ios_device_remove()
             $data['push_token'] = $push_token;
             $data['uid'] = $uid;
 
+            $post = array();
+            $post['m'] = 'api';
+            $post['a'] = 'user_remove';
+            $post['push_token'] = $push_token;
+            $post['uid'] = $uid;
+            $post['teamtoy'] = $_SERVER['HTTP_HOST'];
+
+            @post_data(IOSPUSH_API, $post);
+
             return apiController::send_result( $data );
         }
     } else {
