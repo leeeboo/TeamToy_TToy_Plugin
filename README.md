@@ -10,7 +10,7 @@ TeamToy iOS推送支持插件
 作者微博：http://weibo.com/imlibo
 
 简介：
-如果您使用了TeamToy的iOS官方客户端，并且希望收到push信息的话，那么请安装这个插件^_^！
+如果您使用了TeamToy的iOS客户端（名字还没想好，广泛征集），并且希望收到push信息的话，那么请安装这个插件^_^！
 
 用法：
 确保您在使用最新（尽量新）版本的TeamToy（可以在TeamToy中升级）；
