@@ -39,12 +39,7 @@ if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`",db()) )
 	run_sql("CREATE TABLE `".IOSPUSH_MESSAGE_TABLE."` 
 	(
         `id` INT( 10 ) unsigned NOT NULL AUTO_INCREMENT ,
-        `message` VARCHAR( 255 ) NOT NULL ,
-        `to_uid` INT( 10 ) NOT NULL DEFAULT 0 ,
-        `push_token` VARCHAR( 71 ) NOT NULL ,
-        `action` VARCHAR( 32 ) NOT NULL ,
-		`from_uid` INT( 10 ) NOT NULL DEFAULT 0 ,
-        `message_id` INT( 10 ) NOT NULL DEFAULT 0 ,
+        `body` TEXT NOT NULL ,
         `dateline` INT(10) unsigned NOT NULL DEFAULT 0 ,
         `sent` TINYINT(1) NOT NULL DEFAULT 0 ,
 		PRIMARY KEY (  `id` )
@@ -157,7 +152,7 @@ function push( $data )
             $uid = intval(v('uid'));
             if ($uid > 0 && $uid != $_SESSION['uid']) {
                 $message = $_SESSION['uname'] . '转让了一条Todo给您！';
-                push_todo_assign($uid, $message);
+                push_todo_assign($uid, $message, $data['tid']);
             }
             break;
         case 'TODO_ADD_COMMENT':
@@ -178,7 +173,7 @@ function push( $data )
 					if( !in_array( $uitem['uid'] , $follow_uids ) )
                     {
                         $message = $_SESSION['uname'] . '评论了你关注的TODO！';
-                        push_todo_add_comment($uitem['uid'], $message);
+                        push_todo_add_comment($uitem['uid'], $message, $data['tid']);
 					}
 				}
 			}
@@ -188,7 +183,7 @@ function push( $data )
 			{
                 if( !in_array( $tinfo['owner_uid'] , $follow_uids ) ) {
                     $message = $_SESSION['uname'] . '评论了你的TODO！';
-                    push_todo_add_comment($tinfo['owner_uid'], $message);
+                    push_todo_add_comment($tinfo['owner_uid'], $message, $data['tid']);
                 }
 			}
 			
@@ -222,7 +217,7 @@ function push( $data )
 						{
                             if( $muid != uid() && $muid != $tinfo['owner_uid'] ) {
                                 $message = $_SESSION['uname'] . '在TODO的评论中@了你！';
-                                push_todo_add_comment($muid, $message);
+                                push_todo_add_comment($muid, $message, $data['tid']);
                             }
 						}
 					}
@@ -331,7 +326,7 @@ function push_im($to_uid = 0, $message = '', $message_id = 0) {
     }
 }
 
-function push_todo_assign($to_uid = 0, $message = '') {
+function push_todo_assign($to_uid = 0, $message = '', $tid = 0) {
     $from_uid = $_SESSION['uid'];
     $from_uid = intval($from_uid);
 
@@ -351,6 +346,7 @@ function push_todo_assign($to_uid = 0, $message = '') {
                 $push['push_token'] = $user['push_token'];
                 $push['action'] = 'todo_assign';
                 $push['from_uid'] = $from_uid;
+                $push['todo_id'] = $tid;
 
                 set_post_data($push);
             }
@@ -358,7 +354,7 @@ function push_todo_assign($to_uid = 0, $message = '') {
     }
 }
 
-function push_todo_add_comment($to_uid = 0, $message = '') {
+function push_todo_add_comment($to_uid = 0, $message = '', $tid = 0) {
     $from_uid = $_SESSION['uid'];
     $from_uid = intval($from_uid);
 
@@ -378,6 +374,7 @@ function push_todo_add_comment($to_uid = 0, $message = '') {
                 $push['push_token'] = $user['push_token'];
                 $push['action'] = 'todo_add_comment';
                 $push['from_uid'] = $from_uid;
+                $push['todo_id'] = $tid;
 
                 set_post_data($push);
             }
@@ -484,15 +481,14 @@ function plugin_check_iospush()
         run_sql( $sql );
 
         if( db_errno() == 0  ) {
-            unset($line['id']);
-            unset($line['dateline']);
-            unset($line['sent']);
 
-            $line['m'] = 'api';
-            $line['a'] = 'send_push';
-            $line['domain'] = $_SERVER['HTTP_HOST'];
+            $push = unserialize($line['body']);
 
-            if (@post_data(IOSPUSH_API, $line)) {
+            $push['m'] = 'api';
+            $push['a'] = 'send_push';
+            $push['domain'] = $_SERVER['HTTP_HOST'];
+
+            if (@post_data(IOSPUSH_API, $push)) {
                 $sql = "UPDATE `".IOSPUSH_MESSAGE_TABLE."` SET `sent` = 1 WHERE `id` = '" . intval($id) . "' LIMIT 1";
             } else {
                 $sql = "UPDATE `".IOSPUSH_MESSAGE_TABLE."` SET `sent` = -1 WHERE `id` = '" . intval($id) . "' LIMIT 1";
@@ -511,6 +507,9 @@ function plugin_check_iospush()
 }
 
 function set_post_data($data) {
+    $body = serialize($data);
+    $data = array();
+    $data['body'] = $body;
     $data['dateline'] = time();
     $data['sent'] = 0;
 
