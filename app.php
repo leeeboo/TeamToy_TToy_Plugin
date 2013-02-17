@@ -56,16 +56,10 @@ function ios_device_add()
 
     if( (strlen($device_id) > 0) && (strlen($push_token) > 0) )
     {
-        $sql = "SELECT COUNT(*) FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `uid` = '" . intval( $uid ) . "' AND `device_id` = '" . $device_id . "' ";
+        $sql = "DELETE FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `device_id` = '" . $device_id . "'";
+        run_sql( $sql );
 
-        if( get_var( $sql ) < 1 ) {
-            $sql = "INSERT INTO `".IOSPUSH_DEVICE_TABLE."` ( `uid` , `device_id` , `push_token` ) 
-                VALUES ( '" . $uid . "' , '" . $device_id . "' , '" . $push_token . "' ) ";
-
-        } else {
-            $sql = "UPDATE `".IOSPUSH_DEVICE_TABLE."` SET `push_token` = '" . $push_token . "' WHERE `uid` = '" . $uid . "' AND `device_id` = '" . $device_id . "' LIMIT 1";
-        }
-
+        $sql = "INSERT INTO `".IOSPUSH_DEVICE_TABLE."` ( `uid` , `device_id` , `push_token` ) VALUES ( '" . $uid . "' , '" . $device_id . "' , '" . $push_token . "' ) ";
         run_sql( $sql );
 
         if( db_errno() != 0 ) {
