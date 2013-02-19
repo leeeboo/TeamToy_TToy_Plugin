@@ -5,13 +5,15 @@ TeamToy extenstion info block
 ##folder_name ios_push
 ##author 李博
 ##email lb13810398408@gmail.com
-##reversion 1
+##reversion 1.0.1
 ##desp 使iOS客户端可以从本站获得推送功能。
 ##update_url http://tt2net.sinaapp.com/?c=plugin&a=update_package&name=stoken 
 ##reverison_url http://tt2net.sinaapp.com/?c=plugin&a=latest_reversion&name=stoken 
 ***/
 
 // 检查并创建数据库
+define('IOSPUSH_PLUGIN_VERSION', '1.0.1');
+define('IOSPUSH_PLUGIN_BUILD', '20130219');
 define('IOSPUSH_DEVICE_TABLE', 'iospush_userdevice');
 define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
 
@@ -498,6 +500,69 @@ function plugin_check_iospush()
     } else {
         return apiController::send_result( array('to_send'=>0) );
     }
+}
+
+//direct message list
+add_action('API_IOS_DM_LIST', 'ios_dm_list');
+function ios_dm_list()
+{
+    $uid = $_SESSION['uid'];
+    $uid = intval($uid);
+
+    $sql = "SELECT * FROM `message` WHERE `from_uid` = '" . intval($uid) . "' OR `to_uid` = '" . intval($uid) . "'  ORDER BY `id` DESC";
+    //sae_debug( 'sql=' . $sql );
+
+    if( !$data = get_data( $sql ) ) return apiController::send_error( LR_API_DB_EMPTY_RESULT , 'EMPTY RESULT' );
+
+    $chat_data = array();
+
+    if( db_errno() != 0 )
+        return apiController::send_error(  LR_API_DB_ERROR , 'DATABASE ERROR '   );
+    else
+    {
+        if( is_array( $data ) )
+        {
+            $tmp = array();
+
+            foreach ($data as $key => $value)
+            {
+                $k_1 = $value['from_uid'] . '-' . $value['to_uid'];
+                $k_2 = $value['to_uid'] . '-' . $value['from_uid'];
+
+                if (isset($tmp[$k_1])) {
+                    $tmp[$k_1][] = $value;
+                } else {
+                    if (isset($tmp[$k_2])) {
+                        $tmp[$k_2][] = $value;
+                    } else {
+                        $tmp[$k_1] = array();
+                        $tmp[$k_1][] = $value;
+                    }
+                }
+            }
+
+
+            foreach ($tmp as $key => $value) {
+                $keys = explode('-', $key);
+                $keys[0] = intval($keys[0]);
+                $keys[1] = intval($keys[1]);
+
+                $buddy_id = ($uid == $keys[0]) ? $keys[1] : $keys[0];
+                $buddy = get_user_info_by_id($buddy_id);
+
+                $last_message = reset($value);
+
+                $chat_data[] = array('buddy' => $buddy, 'last_message' => $last_message);
+            }
+        }
+        return apiController::send_result(  array( 'items' => $chat_data)  );
+    }
+}
+
+add_action('API_IOS_PLUGIN_VERSION', 'ios_plugin_version');
+function ios_plugin_version()
+{
+    return apiController::send_result(  array( 'version' => IOSPUSH_PLUGIN_VERSION, 'build' => IOSPUSH_PLUGIN_BUILD)  );
 }
 
 function set_post_data($data) {
