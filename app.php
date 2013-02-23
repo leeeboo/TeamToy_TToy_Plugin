@@ -5,15 +5,15 @@ TeamToy extenstion info block
 ##folder_name ios_push
 ##author 李博
 ##email lb13810398408@gmail.com
-##reversion 1.0.2
+##reversion 1.0.3
 ##desp 使iOS客户端可以从本站获得推送功能。
 ##update_url http://tt2net.sinaapp.com/?c=plugin&a=update_package&name=stoken 
 ##reverison_url http://tt2net.sinaapp.com/?c=plugin&a=latest_reversion&name=stoken 
 ***/
 
 // 检查并创建数据库
-define('IOSPUSH_PLUGIN_VERSION', '1.0.2');
-define('IOSPUSH_PLUGIN_BUILD', '20130221');
+define('IOSPUSH_PLUGIN_VERSION', '1.0.3');
+define('IOSPUSH_PLUGIN_BUILD', '20130223');
 define('IOSPUSH_DEVICE_TABLE', 'iospush_userdevice');
 define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
 
@@ -170,9 +170,42 @@ function push( $data )
             $push['to_uid'] = $user['uid'];
             $push['push_token'] = $user['push_token'];
             $push['type'] = $data['type'];
+            $push['action'] = 'notice';
             $push['from_uid'] = $from_uid;
 
             set_post_data($push);
+        }
+    }
+}
+
+add_filter( 'API_IM_SEND_OUTPUT_FILTER' , 'dm_push' );
+function dm_push()
+{
+    $to_uid = intval(v('uid'));
+    $message = z(t(v('text')));
+    if ($to_uid > 0 && !empty($message)) {
+        $message_id = last_id();
+        $message_id = intval($message_id);
+        $message = '【新私信】' . $_SESSION['uname'] . '：' . $message;
+
+        $from_uid = $_SESSION['uid'];
+        $from_uid = intval($from_uid);
+
+        $sql = "SELECT * FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `uid` = '" . $to_uid . "'";
+        $to_user = get_data($sql);
+
+        if ($to_user) {
+            foreach ($to_user as $user) {
+                $push = array();
+                $push['message'] = $message;
+                $push['to_uid'] = $user['uid'];
+                $push['push_token'] = $user['push_token'];
+                $push['action'] = 'dm';
+                $push['from_uid'] = $from_uid;
+                $push['message_id'] = $message_id;
+
+                set_post_data($push);
+            }
         }
     }
 }
