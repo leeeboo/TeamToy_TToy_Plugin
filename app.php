@@ -5,15 +5,15 @@ TeamToy extenstion info block
 ##folder_name ios_push
 ##author 李博
 ##email lb13810398408@gmail.com
-##reversion 1.0.3
+##reversion 1.0.4
 ##desp 使iOS客户端可以从本站获得推送功能。
 ##update_url http://tt2net.sinaapp.com/?c=plugin&a=update_package&name=stoken 
 ##reverison_url http://tt2net.sinaapp.com/?c=plugin&a=latest_reversion&name=stoken 
 ***/
 
 // 检查并创建数据库
-define('IOSPUSH_PLUGIN_VERSION', '1.0.3');
-define('IOSPUSH_PLUGIN_BUILD', '20130223');
+define('IOSPUSH_PLUGIN_VERSION', '1.0.4');
+define('IOSPUSH_PLUGIN_BUILD', '20130225');
 define('IOSPUSH_DEVICE_TABLE', 'iospush_userdevice');
 define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
 
@@ -53,12 +53,11 @@ add_action('API_IOS_BADGE_REMOVE', 'ios_badge_remove');
 function ios_badge_remove()
 {
     $device_id = z(t(v('device_id')));
-    $push_token = z(t(v('push_token')));
     $uid = $_SESSION['uid'];
 
-    if( (strlen($device_id) > 0) && (strlen($push_token) > 0) )
+    if( strlen($device_id) > 0 )
     {
-        $sql = "UPDATE `".IOSPUSH_DEVICE_TABLE."` SET `badge` = 0 WHERE `uid` = '" . intval($uid) . "' AND `device_id` = '" . $device_id . "' AND `push_token` = '" . $push_token . "' LIMIT 1";
+        $sql = "UPDATE `".IOSPUSH_DEVICE_TABLE."` SET `badge` = 0 WHERE `uid` = '" . intval($uid) . "' AND `device_id` = '" . $device_id . "' LIMIT 1";
         run_sql( $sql );
 
         if( db_errno() != 0 ) {
