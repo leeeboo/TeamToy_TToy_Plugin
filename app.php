@@ -5,14 +5,14 @@ TeamToy extenstion info block
 ##folder_name ios_push
 ##author 李博
 ##email lb13810398408@gmail.com
-##reversion 1.0.5
+##reversion 1.0.6
 ##desp 使iOS客户端可以从本站获得推送功能。
 ##update_url http://tt2net.sinaapp.com/?c=plugin&a=update_package&name=stoken 
 ##reverison_url http://tt2net.sinaapp.com/?c=plugin&a=latest_reversion&name=stoken 
 ***/
 
 // 检查并创建数据库
-define('IOSPUSH_PLUGIN_VERSION', '1.0.5');
+define('IOSPUSH_PLUGIN_VERSION', '1.0.6');
 define('IOSPUSH_PLUGIN_BUILD', '20130226');
 define('IOSPUSH_DEVICE_TABLE', 'iospush_userdevice');
 define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
@@ -28,7 +28,6 @@ if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`",db()) )
 		`uid` INT NOT NULL ,
         `device_id` VARCHAR( 32 ) NOT NULL ,
         `push_token` VARCHAR( 71 ) NOT NULL ,
-        `badge` INT( 10 ) NOT NULL DEFAULT 0,
 		PRIMARY KEY (  `uid` )
 	) 	ENGINE = MYISAM ");
 }
@@ -46,28 +45,6 @@ if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`",db()) )
         `sent` TINYINT(1) NOT NULL DEFAULT 0 ,
 		PRIMARY KEY (  `id` )
 	) 	ENGINE = MYISAM ");
-}
-
-// badge归零
-add_action('API_IOS_BADGE_REMOVE', 'ios_badge_remove');
-function ios_badge_remove()
-{
-    $device_id = z(t(v('device_id')));
-    $uid = $_SESSION['uid'];
-
-    if( strlen($device_id) > 0 )
-    {
-        $sql = "UPDATE `".IOSPUSH_DEVICE_TABLE."` SET `badge` = 0 WHERE `uid` = '" . intval($uid) . "' AND `device_id` = '" . $device_id . "' LIMIT 1";
-        run_sql( $sql );
-
-        if( db_errno() != 0 ) {
-            apiController::send_error( LR_API_DB_ERROR , "DATABASE ERROR" . db_error() );
-        } else {
-            return apiController::send_result( array() );
-        }
-    } else {
-        apiController::send_error( LR_API_ARGS_ERROR , "FILED REQUIRED" );
-    }
 }
 
 // 添加API hook，完成业务逻辑
@@ -371,21 +348,20 @@ function ios_plugin_version()
     return apiController::send_result(  array( 'version' => IOSPUSH_PLUGIN_VERSION, 'build' => IOSPUSH_PLUGIN_BUILD)  );
 }
 
-function set_post_data($data) {
+function set_post_data($data)
+{
+    $to_uid = $data['to_uid'];
 
-    $sql = "SELECT * FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `uid` = '" . $data['to_uid'] . "' AND `push_token` = '" . $data['push_token'] . "' LIMIT 1";
-    $to_user = get_line($sql);
+    $sql = "SELECT COUNT(*) FROM `notice` WHERE `to_uid` = '" . intval($to_uid) . "' AND `is_read` = 0 ";
+    $notice_count = intval(get_var( $sql ));
 
-    $badge = $to_user['badge'];
-    $badge = intval($badge);
-    $badge ++;
+    $sql = "SELECT COUNT(*) FROM `message` WHERE `to_uid` = '" . intval($to_uid) . "' AND `is_read` = 0 ";
+    $message_count = intval(get_var( $sql ));
 
-    $sql = "UPDATE `".IOSPUSH_DEVICE_TABLE."` SET `badge` = $badge WHERE `uid` = '" . $data['to_uid'] . "' AND `push_token` = '" . $data['push_token'] . "' LIMIT 1";
-    run_sql( $sql );
-
-    $data['badge'] = $badge;
+    $data['badge'] = $notice_count + $message_count;
 
     $body = serialize($data);
+
     $data = array();
     $data['body'] = $body;
     $data['dateline'] = time();
@@ -405,6 +381,9 @@ function set_post_data($data) {
 }
 
 function post_data($url, $data) {
+
+    $data['ver'] = IOSPUSH_PLUGIN_VERSION;
+
     $res = false;
 
     $sets = array();
