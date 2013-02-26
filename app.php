@@ -5,15 +5,15 @@ TeamToy extenstion info block
 ##folder_name ios_push
 ##author 李博
 ##email lb13810398408@gmail.com
-##reversion 1.0.4
+##reversion 1.0.5
 ##desp 使iOS客户端可以从本站获得推送功能。
 ##update_url http://tt2net.sinaapp.com/?c=plugin&a=update_package&name=stoken 
 ##reverison_url http://tt2net.sinaapp.com/?c=plugin&a=latest_reversion&name=stoken 
 ***/
 
 // 检查并创建数据库
-define('IOSPUSH_PLUGIN_VERSION', '1.0.4');
-define('IOSPUSH_PLUGIN_BUILD', '20130225');
+define('IOSPUSH_PLUGIN_VERSION', '1.0.5');
+define('IOSPUSH_PLUGIN_BUILD', '20130226');
 define('IOSPUSH_DEVICE_TABLE', 'iospush_userdevice');
 define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
 
@@ -358,6 +358,9 @@ function ios_dm_list()
                 $chat_data[] = array('buddy' => $buddy, 'last_message' => $last_message);
             }
         }
+        $sql = "UPDATE `message` SET `is_read` = 1 WHERE `to_uid` = '" . intval($uid) . "' LIMIT 100";
+        run_sql( $sql );
+
         return apiController::send_result(  array( 'items' => $chat_data)  );
     }
 }
