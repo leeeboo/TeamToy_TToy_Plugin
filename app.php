@@ -5,15 +5,15 @@ TeamToy extenstion info block
 ##folder_name ios_push
 ##author 李博
 ##email lb13810398408@gmail.com
-##reversion 1.0.6
+##reversion 1.0.7
 ##desp 使iOS客户端可以从本站获得推送功能。
 ##update_url http://tt2net.sinaapp.com/?c=plugin&a=update_package&name=stoken 
 ##reverison_url http://tt2net.sinaapp.com/?c=plugin&a=latest_reversion&name=stoken 
 ***/
 
 // 检查并创建数据库
-define('IOSPUSH_PLUGIN_VERSION', '1.0.6');
-define('IOSPUSH_PLUGIN_BUILD', '20130226');
+define('IOSPUSH_PLUGIN_VERSION', '1.0.7');
+define('IOSPUSH_PLUGIN_BUILD', '20130227');
 define('IOSPUSH_DEVICE_TABLE', 'iospush_userdevice');
 define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
 
@@ -57,8 +57,29 @@ function ios_device_add()
 
     if( (strlen($device_id) > 0) && (strlen($push_token) > 0) )
     {
+        $sql = "SELECT * FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `device_id` = '" . $device_id . "'";
+        $exists = get_data($sql);
+
+        if (!empty($exists)) {
+            foreach ($exists as $e) {
+                $data['device_id'] = $device_id;
+                $data['push_token'] = $push_token;
+                $data['uid'] = $exists['uid'];
+
+                $post = array();
+                $post['m'] = 'api';
+                $post['a'] = 'user_remove';
+                $post['push_token'] = $push_token;
+                $post['uid'] = $uid;
+                $post['teamtoy'] = $_SERVER['HTTP_HOST'];
+
+                @post_data(IOSPUSH_API, $post);
+            }
+        }
+
         $sql = "DELETE FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `device_id` = '" . $device_id . "'";
         run_sql( $sql );
+
 
         $sql = "INSERT INTO `".IOSPUSH_DEVICE_TABLE."` ( `uid` , `device_id` , `push_token` ) VALUES ( '" . $uid . "' , '" . $device_id . "' , '" . $push_token . "' ) ";
         run_sql( $sql );
