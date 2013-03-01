@@ -1,19 +1,19 @@
 <?php
 /*** 
 TeamToy extenstion info block
-##name iOS推送支持
-##folder_name ios_push
+##name iOS客户端TToy支持
+##folder_name ttoy
 ##author 李博
 ##email lb13810398408@gmail.com
-##reversion 1.0.7
-##desp 使iOS客户端可以从本站获得推送功能。
+##reversion 1.0.8
+##desp 使TToy（iOS客户端）可以从本站获得额外功能（例如Push）支持。
 ##update_url http://tt2net.sinaapp.com/?c=plugin&a=update_package&name=stoken 
 ##reverison_url http://tt2net.sinaapp.com/?c=plugin&a=latest_reversion&name=stoken 
 ***/
 
 // 检查并创建数据库
-define('IOSPUSH_PLUGIN_VERSION', '1.0.7');
-define('IOSPUSH_PLUGIN_BUILD', '20130227');
+define('IOSPUSH_PLUGIN_VERSION', '1.0.8');
+define('IOSPUSH_PLUGIN_BUILD', '20130301');
 define('IOSPUSH_DEVICE_TABLE', 'iospush_userdevice');
 define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
 
