@@ -342,6 +342,9 @@ function ios_dm_list()
                 }
             }
 
+            $data = array();
+            $buddy_ids = array();
+            $chat_data = array();
 
             foreach ($tmp as $key => $value) {
                 $keys = explode('-', $key);
@@ -349,11 +352,28 @@ function ios_dm_list()
                 $keys[1] = intval($keys[1]);
 
                 $buddy_id = ($uid == $keys[0]) ? $keys[1] : $keys[0];
-                $buddy = get_user_info_by_id($buddy_id);
+
+                $buddy_ids[] = $buddy_id;
 
                 $last_message = reset($value);
 
-                $chat_data[] = array('buddy' => $buddy, 'last_message' => $last_message);
+                $data[$buddy_id] = $last_message;
+
+            }
+
+            if (!empty($buddy_ids) && !empty($data)) {
+                $ids = "'".implode("','", (array)$buddy_ids)."'";
+
+                $sql = "SELECT " . USER_INFO . " FROM `user` WHERE `id` IN($ids)";
+                $tmp = get_data($sql);
+
+                foreach ((array)$tmp as $buddy) {
+
+                    if (isset($data[$buddy['id']])) {
+                        $chat_data[] = array('buddy' => $buddy, 'last_message' => $data[$buddy['id']]);
+                    }
+                }
+
             }
         }
         $sql = "UPDATE `message` SET `is_read` = 1 WHERE `to_uid` = '" . intval($uid) . "' LIMIT 100";
