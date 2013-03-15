@@ -113,6 +113,16 @@ function ios_device_add()
 }
 
 // 添加API hook，完成业务逻辑
+add_action('API_IOS_APP_VERSION', 'ios_app_version');
+function ios_app_version()
+{
+    $url = IOSPUSH_API . '?m=api&a=app_version&ver=' . IOSPUSH_PLUGIN_VERSION;
+    $data = file_get_contents($url);
+    $data = json_decode($data, true);
+
+    return apiController::send_result( $data );
+}
+
 add_action('API_IOS_DEVICE_REMOVE', 'ios_device_remove');
 function ios_device_remove()
 {
