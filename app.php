@@ -113,37 +113,6 @@ function ios_device_add()
 }
 
 // 添加API hook，完成业务逻辑
-add_action('API_IOS_APP_VERSION', 'ios_app_version');
-function ios_app_version()
-{
-    $url = IOSPUSH_API;
-
-    $data['ver'] = IOSPUSH_PLUGIN_VERSION;
-    $data['m'] = 'api';
-    $data['a'] = 'app_version';
-
-    $sets = array();
-    foreach ($data as $key => $val) {
-        $sets[] = $key . '=' . urlencode($val);
-    }
-    $fields = implode('&', $sets);
-
-    $ch = curl_init(); //初始化curl
-    curl_setopt($ch, CURLOPT_URL, $url);//设置链接
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);//设置是否返回信息
-    curl_setopt($ch, CURLOPT_POST, 1);//设置为POST方式
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);//POST数据
-    $response = curl_exec($ch);//接收返回信息
-
-    if(curl_errno($ch)){//出错则显示错误信息
-        apiController::send_error( LR_API_DB_ERROR , "DATABASE ERROR" . db_error() );
-    } else {
-        $data = json_decode($response, true);
-        return apiController::send_result( $data );
-    }
-    curl_close($ch);
-}
-
 add_action('API_IOS_DEVICE_REMOVE', 'ios_device_remove');
 function ios_device_remove()
 {
