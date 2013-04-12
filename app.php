@@ -19,11 +19,8 @@ define('IOSPUSH_MESSAGE_TABLE', 'iospush_message');
 
 define('IOSPUSH_API', 'https://iospushservice.sinaapp.com/index.php');
 
-if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`",db()) )
-{
-	// table not exists
-	// create it
-	run_sql("CREATE TABLE `".IOSPUSH_DEVICE_TABLE."` 
+function create_device_table() {
+    run_sql("CREATE TABLE `".IOSPUSH_DEVICE_TABLE."` 
 	(
 		`uid` INT NOT NULL ,
         `device_id` VARCHAR( 32 ) NOT NULL ,
@@ -32,12 +29,8 @@ if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`",db()) )
 	) 	ENGINE = MYISAM ");
 }
 
-
-if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`",db()) )
-{
-	// table not exists
-	// create it
-	run_sql("CREATE TABLE `".IOSPUSH_MESSAGE_TABLE."` 
+function create_message_table() {
+    run_sql("CREATE TABLE `".IOSPUSH_MESSAGE_TABLE."` 
 	(
         `id` INT( 10 ) unsigned NOT NULL AUTO_INCREMENT ,
         `body` TEXT NOT NULL ,
@@ -45,6 +38,79 @@ if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`",db()) )
         `sent` TINYINT(1) NOT NULL DEFAULT 0 ,
 		PRIMARY KEY (  `id` )
 	) 	ENGINE = MYISAM ");
+}
+
+function check_device_table_column() {
+
+    $cols = array();
+    $cols[] = 'uid';
+    $cols[] = 'device_id';
+    $cols[] = 'push_token';
+
+    $data = get_data("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`",db());
+
+    if (count($data) == 3) {
+        $err = 0;
+        foreach ($data as $key => $line) {
+            if ($line['Field'] != $cols[$key]) {
+                $err = 1;
+            }
+        }
+        if ($err == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function check_message_table_column() {
+
+    $cols = array();
+    $cols[] = 'id';
+    $cols[] = 'body';
+    $cols[] = 'dateline';
+    $cols[] = 'sent';
+
+    $data = get_data("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`",db());
+
+    if (count($data) == 4) {
+        $err = 0;
+        foreach ($data as $key => $line) {
+            if ($line['Field'] != $cols[$key]) {
+                $err = 1;
+            }
+        }
+        if ($err == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`",db()) )
+{
+	// table not exists
+	// create it
+    create_device_table();
+} else {
+    if (!check_device_table_column()) {
+        $sql = "DROP TABLE `".IOSPUSH_DEVICE_TABLE."`";
+        run_sql($sql);
+        create_device_table();
+    }
+}
+
+if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`",db()) )
+{
+	// table not exists
+	// create it
+    create_message_table();
+} else {
+    if (!check_message_table_column()) {
+        $sql = "DROP TABLE `".IOSPUSH_MESSAGE_TABLE."`";
+        run_sql($sql);
+        create_message_table();
+    }
 }
 
 // 添加API hook，完成业务逻辑
