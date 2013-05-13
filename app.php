@@ -123,7 +123,7 @@ function ios_device_add()
 
     if( (strlen($device_id) > 0) && (strlen($push_token) > 0) )
     {
-        $sql = "SELECT * FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `device_id` = '" . $device_id . "'";
+        $sql = "SELECT * FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `device_id` = '" . $device_id . "' OR `push_token` = '" . $push_token . "'";
         $exists = get_data($sql);
 
         if (!empty($exists)) {
@@ -143,7 +143,7 @@ function ios_device_add()
             }
         }
 
-        $sql = "DELETE FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `device_id` = '" . $device_id . "'";
+        $sql = "DELETE FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `device_id` = '" . $device_id . "' OR `push_token` = '" . $push_token . "'";
         run_sql( $sql );
 
 
@@ -188,7 +188,7 @@ function ios_device_remove()
 
     if( (strlen($device_id) > 0) && (strlen($push_token) > 0) )
     {
-        $sql = "DELETE FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `uid` = '" . intval( $uid ) . "' AND `device_id` = '" . $device_id . "' LIMIT 1";
+        $sql = "DELETE FROM `".IOSPUSH_DEVICE_TABLE."` WHERE `uid` = '" . intval( $uid ) . "' AND (`device_id` = '" . $device_id . "' OR `push_token` = '" . $push_token . "') LIMIT 1";
 
         run_sql( $sql );
 
