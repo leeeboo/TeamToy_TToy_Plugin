@@ -87,7 +87,7 @@ function check_message_table_column() {
     return false;
 }
 
-if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`",db()) )
+if( ! my_sql("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`") )
 {
 	// table not exists
 	// create it
@@ -100,7 +100,7 @@ if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_DEVICE_TABLE."`",db()) )
     }
 }
 
-if( !mysql_query("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`",db()) )
+if( ! my_sql("SHOW COLUMNS FROM `".IOSPUSH_MESSAGE_TABLE."`") )
 {
 	// table not exists
 	// create it
